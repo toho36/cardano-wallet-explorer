@@ -13,9 +13,7 @@ import { NFTGallery } from '@/components/NFTGallery';
 import { TransactionList } from '@/components/TransactionList';
 
 // Default address to use if none provided
-const DEFAULT_ADDRESS =
-  process.env.NEXT_PUBLIC_DEFAULT_ADDRESS ||
-  'addr1x88ttk0fk6ssan4g2uf2xtx3anppy3djftmkg959tufsc6qkqt76lg22kjjmnns37fmyue765qz347sxfnyks27ysqaqd3ph23';
+const DEFAULT_ADDRESS = process.env.NEXT_PUBLIC_DEFAULT_ADDRESS!;
 
 export default function Home() {
   const [address, setAddress] = useState(DEFAULT_ADDRESS);
@@ -31,7 +29,7 @@ export default function Home() {
     e.preventDefault();
     setAddress(inputAddress);
   };
-
+  console.log(data?.nfts, 'data');
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
@@ -77,7 +75,7 @@ export default function Home() {
             </TabsContent>
 
             <TabsContent value="nfts">
-              <NFTGallery nfts={data.nfts} />
+              <NFTGallery nfts={data.nfts} walletAddress={address} />
             </TabsContent>
 
             <TabsContent value="transactions">

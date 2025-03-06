@@ -18,6 +18,11 @@ export interface NFT {
   name: string;
   image: string;
   collection?: string;
+  policyId?: string;
+  assetName?: string;
+  fingerprint?: string;
+  description?: string;
+  initialMintTxHash?: string;
   metadata?: unknown;
 }
 
