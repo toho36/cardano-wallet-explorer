@@ -24,7 +24,7 @@ export default function Home() {
     queryKey: ['wallet', address],
     queryFn: () => fetchWalletData(address),
     retry: 2,
-    enabled: !!address, // Only run query if address is provided
+    // enabled: !!address, // Only run query if address is provided
   });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
