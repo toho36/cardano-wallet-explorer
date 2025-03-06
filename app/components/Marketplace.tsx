@@ -7,14 +7,16 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function Marketplace() {
   // State to track how many NFTs to display
   const [limit, setLimit] = useState(8); // Start with fewer items on mobile
+  // Create state to store all loaded NFTs
+  const [allNFTs, setAllNFTs] = useState<NFT[]>([]);
 
   const {
-    data: nfts,
+    data: newNFTs,
     isLoading,
     isError,
     isFetching,
@@ -24,11 +26,30 @@ export function Marketplace() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  // Update allNFTs when new data comes in
+  useEffect(() => {
+    if (newNFTs && newNFTs.length > 0) {
+      setAllNFTs((prev) => {
+        // Get existing asset IDs to avoid duplicates
+        const existingAssets = new Set(prev.map((nft) => nft.asset));
+
+        // Filter out any NFTs we already have
+        const uniqueNewNFTs = newNFTs.filter(
+          (nft) => !existingAssets.has(nft.asset)
+        );
+
+        // Combine previous NFTs with new unique ones
+        return [...prev, ...uniqueNewNFTs];
+      });
+    }
+  }, [newNFTs]);
+
   const handleViewMore = () => {
     setLimit((prevLimit) => prevLimit + 8); // Load 8 more NFTs at a time
   };
 
-  if (isLoading) {
+  // Display loading state only on initial load
+  if (isLoading && allNFTs.length === 0) {
     return (
       <div className="flex justify-center items-center h-32 sm:h-48">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -37,7 +58,7 @@ export function Marketplace() {
     );
   }
 
-  if (isError || !nfts || nfts.length === 0) {
+  if (isError && allNFTs.length === 0) {
     return (
       <div className="text-center py-6 bg-gray-50 rounded-lg">
         <p className="text-gray-500">
@@ -50,7 +71,7 @@ export function Marketplace() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-        {nfts.map((nft) => (
+        {allNFTs.map((nft) => (
           <NFTCard key={nft.asset} nft={nft} />
         ))}
       </div>
@@ -66,7 +87,7 @@ export function Marketplace() {
             variant="outline"
             onClick={handleViewMore}
             className="w-full sm:w-auto px-6"
-            // disabled={nfts.length < limit} // Disable if no more NFTs to load
+            // disabled={newNFTs && newNFTs.length < limit} // Disable if no more NFTs to load
           >
             View More
           </Button>
