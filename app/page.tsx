@@ -13,9 +13,7 @@ import { NFTGallery } from '@/components/NFTGallery';
 import { TransactionList } from '@/components/TransactionList';
 
 // Default address to use if none provided
-const DEFAULT_ADDRESS =
-  process.env.NEXT_PUBLIC_DEFAULT_ADDRESS ||
-  'addr1x88ttk0fk6ssan4g2uf2xtx3anppy3djftmkg959tufsc6qkqt76lg22kjjmnns37fmyue765qz347sxfnyks27ysqaqd3ph23';
+const DEFAULT_ADDRESS = process.env.NEXT_PUBLIC_DEFAULT_ADDRESS!;
 
 export default function Home() {
   const [address, setAddress] = useState(DEFAULT_ADDRESS);
