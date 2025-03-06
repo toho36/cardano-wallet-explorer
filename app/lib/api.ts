@@ -267,3 +267,58 @@ export async function fetchNFTData(assetId: string): Promise<NFT | null> {
     return null;
   }
 }
+export async function fetchFeaturedNFTs(limit: number = 12): Promise<NFT[]> {
+  try {
+    // Fetch some recent or popular assets from Blockfrost
+    const assets = await blockfrostFetch<{ asset: string }[]>(
+      `/assets?order=desc&count=${limit}`
+    );
+
+    const nfts: NFT[] = [];
+
+    // Process each asset to determine if it's an NFT
+    for (const assetItem of assets) {
+      try {
+        const assetInfo = await blockfrostFetch<BlockfrostAssetInfo>(
+          `/assets/${assetItem.asset}`
+        );
+
+        // Check if this is likely an NFT
+        const metadata = assetInfo.onchain_metadata || assetInfo.metadata;
+        // For marketplace, we only want items with images
+        if (metadata && assetInfo.quantity === '1') {
+          const imageUrl = extractImageUrl(metadata);
+          const assetName =
+            metadata.name || assetInfo.asset_name || 'Unknown Asset';
+
+          nfts.push({
+            asset: assetItem.asset,
+            name: assetName,
+            image: imageUrl,
+            collection:
+              metadata.collection ||
+              (assetInfo.policy_id
+                ? assetInfo.policy_id.slice(0, 10)
+                : undefined),
+            policyId: assetInfo.policy_id,
+            assetName: assetInfo.asset_name,
+            fingerprint: assetInfo.fingerprint,
+            description: metadata.description as string,
+            initialMintTxHash: assetInfo.initial_mint_tx_hash,
+            metadata: metadata,
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to process asset ${assetItem.asset}:`, error);
+      }
+
+      // Stop if we have enough NFTs
+      if (nfts.length >= limit / 2) break;
+    }
+
+    return nfts;
+  } catch (error) {
+    console.error('Error fetching featured NFTs:', error);
+    return [];
+  }
+}

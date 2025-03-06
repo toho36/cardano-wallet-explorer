@@ -12,6 +12,7 @@ export interface BlockfrostAssetInfo {
   initial_mint_tx_hash?: string;
   onchain_metadata?: BlockfrostAssetMetadata;
   metadata?: BlockfrostAssetMetadata;
+  quantity?: string;
 }
 
 export interface BlockfrostAmount {
