@@ -311,9 +311,6 @@ export async function fetchFeaturedNFTs(limit: number = 12): Promise<NFT[]> {
       } catch (error) {
         console.error(`Failed to process asset ${assetItem.asset}:`, error);
       }
-
-      // Stop if we have enough NFTs
-      if (nfts.length >= limit / 2) break;
     }
 
     return nfts;

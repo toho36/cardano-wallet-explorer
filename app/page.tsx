@@ -31,7 +31,6 @@ export default function Home() {
     e.preventDefault();
     setAddress(inputAddress);
   };
-  console.log(data?.nfts, 'data');
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
