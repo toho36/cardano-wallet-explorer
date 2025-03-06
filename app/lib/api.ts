@@ -1,3 +1,4 @@
+import axios from 'axios';
 import {
   BlockfrostAssetMetadata,
   BlockfrostAssetInfo,
@@ -15,23 +16,26 @@ import { Transaction, NFT, WalletData } from '../types/wallet';
 const API_URL = process.env.NEXT_PUBLIC_BLOCKFROST_API_URL;
 const API_KEY = process.env.NEXT_PUBLIC_BLOCKFROST_API_KEY;
 
-// Helper function for Blockfrost API calls
+// Helper function for Blockfrost API calls using Axios
 export const blockfrostFetch = async <T>(endpoint: string): Promise<T> => {
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    headers: new Headers({
-      project_id: API_KEY || '',
-      'Content-Type': 'application/json',
-    }),
-  });
+  try {
+    const response = await axios.get<T>(`${API_URL}${endpoint}`, {
+      headers: {
+        project_id: API_KEY || '',
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => null);
-    throw new Error(
-      error?.message || `API request failed with status ${response.status}`
-    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(
+        error.response.data?.message ||
+          `API request failed with status ${error.response.status}`
+      );
+    }
+    throw error;
   }
-
-  return response.json();
 };
 
 // Function to extract image URL from metadata
@@ -172,20 +176,21 @@ async function processTransaction(
 async function processNFTs(assets: BlockfrostAmount[]): Promise<NFT[]> {
   const nfts: NFT[] = [];
 
-  // Filter for potential NFTs (non-lovelace with quantity 1)
-  const potentialNFTs = assets.filter(
-    (asset) => asset.unit !== 'lovelace' && asset.quantity === '1'
-  );
+  // Filter out lovelace (ADA)
+  const nonLovelaceAssets = assets.filter((asset) => asset.unit !== 'lovelace');
 
-  // Fetch metadata for each potential NFT
-  for (const asset of potentialNFTs) {
+  // Process each non-lovelace asset
+  for (const asset of nonLovelaceAssets) {
     try {
       const assetInfo = await blockfrostFetch<BlockfrostAssetInfo>(
         `/assets/${asset.unit}`
       );
-      const metadata = assetInfo.onchain_metadata || assetInfo.metadata;
 
-      if (metadata) {
+      // Check if this is likely an NFT (quantity 1 with metadata)
+      const metadata = assetInfo.onchain_metadata || assetInfo.metadata;
+      const isLikelyNFT = asset.quantity === '1' && !!metadata;
+
+      if (isLikelyNFT) {
         const imageUrl = extractImageUrl(metadata);
         const assetName =
           metadata.name || assetInfo.asset_name || 'Unknown Asset';
@@ -199,11 +204,16 @@ async function processNFTs(assets: BlockfrostAmount[]): Promise<NFT[]> {
             (assetInfo.policy_id
               ? assetInfo.policy_id.slice(0, 10)
               : undefined),
+          policyId: assetInfo.policy_id,
+          assetName: assetInfo.asset_name,
+          fingerprint: assetInfo.fingerprint,
+          description: metadata.description as string,
+          initialMintTxHash: assetInfo.initial_mint_tx_hash,
           metadata: metadata,
         });
       }
+      // Assets that aren't NFTs simply won't be added to the nfts array
     } catch (error) {
-      // Skip assets that can't be processed
       console.error(`Failed to fetch metadata for asset ${asset.unit}`, error);
     }
 
@@ -212,4 +222,48 @@ async function processNFTs(assets: BlockfrostAmount[]): Promise<NFT[]> {
   }
 
   return nfts;
+}
+
+// Function to fetch a single NFT by asset ID
+export async function fetchNFTData(assetId: string): Promise<NFT | null> {
+  try {
+    // Make sure we're using the correct format for the API call
+    // assetId should already be formatted as policyId + hexEncodedAssetName
+    const assetInfo = await blockfrostFetch<BlockfrostAssetInfo>(
+      `/assets/${assetId}`
+    );
+
+    if (!assetInfo) {
+      console.error('Asset not found:', assetId);
+      return null;
+    }
+
+    // Process the metadata (onchain_metadata has priority over metadata)
+    const metadata = assetInfo.onchain_metadata || assetInfo.metadata;
+
+    if (metadata) {
+      const imageUrl = extractImageUrl(metadata);
+      const assetName =
+        metadata.name || assetInfo.asset_name || 'Unknown Asset';
+
+      return {
+        asset: assetId,
+        name: assetName,
+        image: imageUrl,
+        collection:
+          metadata.collection ||
+          (assetInfo.policy_id ? assetInfo.policy_id.slice(0, 10) : undefined),
+        policyId: assetInfo.policy_id,
+        assetName: assetInfo.asset_name,
+        fingerprint: assetInfo.fingerprint,
+        description: metadata.description as string,
+        initialMintTxHash: assetInfo.initial_mint_tx_hash,
+        metadata: metadata,
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error(`Failed to fetch NFT data for asset ${assetId}`, error);
+    return null;
+  }
 }

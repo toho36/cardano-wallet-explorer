@@ -1,5 +1,6 @@
-/* eslint-disable @next/next/no-img-element */
 import { NFT } from '@/types/wallet';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
   Card,
   CardContent,
@@ -10,9 +11,10 @@ import {
 
 interface NFTGalleryProps {
   nfts: NFT[];
+  walletAddress: string;
 }
 
-export function NFTGallery({ nfts }: NFTGalleryProps) {
+export function NFTGallery({ nfts, walletAddress }: NFTGalleryProps) {
   return (
     <Card>
       <CardHeader>
@@ -23,7 +25,7 @@ export function NFTGallery({ nfts }: NFTGalleryProps) {
         {nfts && nfts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {nfts.map((nft, index) => (
-              <NFTCard key={index} nft={nft} />
+              <NFTCard key={index} nft={nft} walletAddress={walletAddress} />
             ))}
           </div>
         ) : (
@@ -38,27 +40,35 @@ export function NFTGallery({ nfts }: NFTGalleryProps) {
 
 interface NFTCardProps {
   nft: NFT;
+  walletAddress: string;
 }
 
 function NFTCard({ nft }: NFTCardProps) {
+  const router = useRouter();
+
+  const handleClick = () => {
+    router.push(`/NFTDetailPage/${encodeURIComponent(nft.asset)}`);
+  };
+
   return (
-    <div className="bg-white border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+    <div
+      className="bg-white border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer active:scale-[0.98]"
+      onClick={handleClick}
+    >
       {nft.image ? (
-        <div className="aspect-square overflow-hidden bg-gray-100">
-          <img
+        <div className="aspect-square overflow-hidden bg-gray-100 relative">
+          <Image
             src={nft.image}
             alt={nft.name || 'NFT'}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 768px) 50vw, 25vw"
+            className="object-cover"
             onError={(e) => {
-              const target = e.currentTarget;
+              const target = e.target as HTMLImageElement;
               target.style.display = 'none';
-              const parent = target.parentElement;
-              if (parent) {
-                const textDiv = document.createElement('div');
-                textDiv.className =
-                  'w-full h-full flex items-center justify-center text-gray-500';
-                textDiv.textContent = 'No Image';
-                parent.appendChild(textDiv);
+              if (target.parentElement) {
+                target.parentElement.innerHTML =
+                  '<div class="flex items-center justify-center h-full w-full text-gray-500">No Image</div>';
               }
             }}
           />

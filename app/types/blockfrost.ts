@@ -8,6 +8,8 @@ export interface BlockfrostAssetMetadata {
 export interface BlockfrostAssetInfo {
   asset_name?: string;
   policy_id?: string;
+  fingerprint?: string;
+  initial_mint_tx_hash?: string;
   onchain_metadata?: BlockfrostAssetMetadata;
   metadata?: BlockfrostAssetMetadata;
 }
