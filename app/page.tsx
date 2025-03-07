@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2 } from 'lucide-react';
-import { fetchWalletData } from '@/lib/api';
-import { WalletOverview } from '@/components/WalletOverview';
-import { NFTGallery } from '@/components/NFTGallery';
-import { TransactionList } from '@/components/TransactionList';
-
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2 } from "lucide-react";
+import { fetchWalletData } from "@/lib/api";
+import { WalletOverview } from "@/components/WalletOverview";
+import { NFTGallery } from "@/components/NFTGallery";
+import { TransactionList } from "@/components/TransactionList";
+import { Marketplace } from "@/components/MarketPlace";
 // Default address to use if none provided
 const DEFAULT_ADDRESS = process.env.NEXT_PUBLIC_DEFAULT_ADDRESS!;
 
@@ -20,7 +20,7 @@ export default function Home() {
   const [inputAddress, setInputAddress] = useState(DEFAULT_ADDRESS);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['wallet', address],
+    queryKey: ["wallet", address],
     queryFn: () => fetchWalletData(address),
     retry: 2,
   });
@@ -29,7 +29,7 @@ export default function Home() {
     e.preventDefault();
     setAddress(inputAddress);
   };
-  console.log(data?.nfts, 'data');
+  console.log(data?.nfts, "data");
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
@@ -83,6 +83,7 @@ export default function Home() {
             </TabsContent>
           </Tabs>
         )}
+        <Marketplace />
       </div>
     </main>
   );
