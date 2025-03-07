@@ -18,6 +18,7 @@ export function FeaturedNFTs() {
   const [dragStart, setDragStart] = useState(0);
   const [dragEnd, setDragEnd] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
+  const [hasMoved, setHasMoved] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -91,6 +92,7 @@ export function FeaturedNFTs() {
     setTouchStart(e.targetTouches[0].clientX);
     setTouchEnd(e.targetTouches[0].clientX);
     setDragOffset(0);
+    setHasMoved(false);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -98,6 +100,10 @@ export function FeaturedNFTs() {
     if (!nfts) return;
 
     const diff = touchEnd - touchStart;
+    if (Math.abs(diff) > 10) {
+      setHasMoved(true);
+    }
+
     const containerWidth = sliderRef.current?.clientWidth || 1;
     const itemWidth = containerWidth / itemsPerSlide;
     const percentPerPixel = 100 / (nfts.length * itemWidth);
@@ -136,6 +142,7 @@ export function FeaturedNFTs() {
     setDragStart(e.clientX);
     setDragEnd(e.clientX);
     setDragOffset(0);
+    setHasMoved(false);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -143,6 +150,10 @@ export function FeaturedNFTs() {
 
     setDragEnd(e.clientX);
     const diff = dragEnd - dragStart;
+    if (Math.abs(diff) > 10) {
+      setHasMoved(true);
+    }
+
     const containerWidth = sliderRef.current?.clientWidth || 1;
     const itemWidth = containerWidth / itemsPerSlide;
     const percentPerPixel = 100 / (nfts.length * itemWidth);
@@ -230,7 +241,7 @@ export function FeaturedNFTs() {
                 className="px-1.5 flex-shrink-0"
                 style={{ width: `${100 / nfts.length}%` }}
               >
-                <NFTCard nft={nft} />
+                <NFTCard nft={nft} hasMoved={hasMoved} />
               </div>
             ))}
           </div>
@@ -275,11 +286,13 @@ export function FeaturedNFTs() {
   );
 }
 
-function NFTCard({ nft }: { nft: NFT }) {
+function NFTCard({ nft, hasMoved }: { nft: NFT; hasMoved: boolean }) {
   const router = useRouter();
 
   const handleClick = () => {
-    router.push(`/NFTDetailPage/${encodeURIComponent(nft.asset)}`);
+    if (!hasMoved) {
+      router.push(`/NFTDetailPage/${encodeURIComponent(nft.asset)}`);
+    }
   };
 
   return (
