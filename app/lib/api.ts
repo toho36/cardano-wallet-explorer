@@ -267,7 +267,7 @@ export async function fetchNFTData(assetId: string): Promise<NFT | null> {
     return null;
   }
 }
-export async function fetchFeaturedNFTs(limit: number = 12): Promise<NFT[]> {
+export async function fetchFeaturedNFTs(limit: number = 16): Promise<NFT[]> {
   try {
     // Fetch some recent or popular assets from Blockfrost
     const assets = await blockfrostFetch<{ asset: string }[]>(

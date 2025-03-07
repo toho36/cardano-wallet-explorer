@@ -11,7 +11,7 @@ import { fetchWalletData } from "@/lib/api";
 import { WalletOverview } from "@/components/WalletOverview";
 import { NFTGallery } from "@/components/NFTGallery";
 import { TransactionList } from "@/components/TransactionList";
-import { Marketplace } from "@/components/MarketPlace";
+import { FeaturedNFTs } from "@/components/FeaturedNFTs";
 // Default address to use if none provided
 const DEFAULT_ADDRESS = process.env.NEXT_PUBLIC_DEFAULT_ADDRESS!;
 
@@ -38,11 +38,11 @@ export default function Home() {
         </h1>
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-            Marketplace
+            Featured NFTs
           </h2>
           <Card>
             <CardContent className="p-4 sm:p-6">
-              <Marketplace />
+              <FeaturedNFTs />
             </CardContent>
           </Card>
         </section>
