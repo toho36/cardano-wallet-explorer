@@ -33,57 +33,71 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-900 mb-6 text-center">
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">
           Cardano Wallet Explorer
         </h1>
-
-        <form onSubmit={handleSubmit} className="flex gap-2 mb-8">
-          <Input
-            value={inputAddress}
-            onChange={(e) => setInputAddress(e.target.value)}
-            placeholder="Enter Cardano wallet address"
-            className="flex-grow"
-          />
-          <Button type="submit">Search</Button>
-        </form>
-
-        {isLoading && (
-          <div className="flex justify-center items-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="ml-2">Loading wallet data...</span>
-          </div>
-        )}
-
-        {isError && (
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="pt-6">
-              <p className="text-red-600">Error: {error.message}</p>
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-800">
+            Marketplace
+          </h2>
+          <Card>
+            <CardContent className="p-4 sm:p-6">
+              <Marketplace />
             </CardContent>
           </Card>
-        )}
+        </section>
 
-        {data && !isLoading && (
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="nfts">NFTs</TabsTrigger>
-              <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            </TabsList>
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-800">
+            Wallet Explorer
+          </h2>
+          <form onSubmit={handleSubmit} className="flex gap-2 mb-8">
+            <Input
+              value={inputAddress}
+              onChange={(e) => setInputAddress(e.target.value)}
+              placeholder="Enter Cardano wallet address"
+              className="flex-grow"
+            />
+            <Button type="submit">Search</Button>
+          </form>
 
-            <TabsContent value="overview">
-              <WalletOverview data={data} address={address} />
-            </TabsContent>
+          {isLoading && (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2">Loading wallet data...</span>
+            </div>
+          )}
 
-            <TabsContent value="nfts">
-              <NFTGallery nfts={data.nfts} walletAddress={address} />
-            </TabsContent>
+          {isError && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-6">
+                <p className="text-red-600">Error: {error.message}</p>
+              </CardContent>
+            </Card>
+          )}
 
-            <TabsContent value="transactions">
-              <TransactionList transactions={data.transactions} />
-            </TabsContent>
-          </Tabs>
-        )}
-        <Marketplace />
+          {data && !isLoading && (
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="nfts">NFTs</TabsTrigger>
+                <TabsTrigger value="transactions">Transactions</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview">
+                <WalletOverview data={data} address={address} />
+              </TabsContent>
+
+              <TabsContent value="nfts">
+                <NFTGallery nfts={data.nfts} walletAddress={address} />
+              </TabsContent>
+
+              <TabsContent value="transactions">
+                <TransactionList transactions={data.transactions} />
+              </TabsContent>
+            </Tabs>
+          )}
+        </section>
       </div>
     </main>
   );
