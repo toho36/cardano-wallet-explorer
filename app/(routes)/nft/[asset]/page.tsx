@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, Share2, ExternalLink } from 'lucide-react';
-import { fetchNFTData } from '@/lib/api';
-import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
-import Image from 'next/image';
+import { useParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChevronLeft, Share2, ExternalLink } from "lucide-react";
+import { fetchNFTData } from "@/lib/api";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import Image from "next/image";
 
 export default function NFTDetailPage() {
   const params = useParams();
@@ -23,7 +23,7 @@ export default function NFTDetailPage() {
     isError,
     error,
   } = useQuery({
-    queryKey: ['nft', assetId],
+    queryKey: ["nft", assetId],
     queryFn: () => fetchNFTData(assetId),
     retry: 2,
   });
@@ -36,12 +36,12 @@ export default function NFTDetailPage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: nft?.name || 'NFT Details',
+          title: nft?.name || "NFT Details",
           text: `Check out this NFT: ${nft?.name}`,
           url: window.location.href,
         });
       } catch (err) {
-        console.error('Failed to share:', err);
+        console.error("Failed to share:", err);
       }
     } else {
       // Fallback for browsers that don't support Web Share API
@@ -75,7 +75,7 @@ export default function NFTDetailPage() {
         <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-6">
             <p className="text-red-600">
-              {isError ? `Error: ${error.message}` : 'NFT not found'}
+              {isError ? `Error: ${error.message}` : "NFT not found"}
             </p>
           </CardContent>
         </Card>
@@ -117,14 +117,14 @@ export default function NFTDetailPage() {
               <div className="relative aspect-square">
                 <Image
                   src={nft.image}
-                  alt={nft.name || 'NFT'}
+                  alt={nft.name || "NFT"}
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-contain"
                   priority
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
+                    target.style.display = "none";
                     if (target.parentElement) {
                       target.parentElement.innerHTML =
                         '<div class="flex items-center justify-center h-full w-full text-gray-500">Image not available</div>';
@@ -144,7 +144,7 @@ export default function NFTDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-xl md:text-2xl">
-                {nft.name || 'Unnamed NFT'}
+                {nft.name || "Unnamed NFT"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">

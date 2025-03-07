@@ -1,11 +1,11 @@
-import { Transaction } from '@/types/wallet';
+import { Transaction } from "@/types/wallet";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -52,7 +52,7 @@ function TransactionItem({ tx }: TransactionItemProps) {
       </div>
       <div className="text-sm mt-1">
         {tx.amount !== undefined &&
-          `${tx.amount > 0 ? '+' : ''}${tx.amount / 1000000} ₳`}
+          `${tx.amount > 0 ? "+" : ""}${tx.amount / 1000000} ₳`}
       </div>
     </div>
   );

@@ -8,10 +8,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { fetchWalletData } from "@/lib/api";
-import { WalletOverview } from "@/components/WalletOverview";
-import { NFTGallery } from "@/components/NFTGallery";
-import { TransactionList } from "@/components/TransactionList";
-import { FeaturedNFTs } from "@/components/FeaturedNFTs";
+import { WalletOverview } from "@/components/wallet/WalletOverview";
+import { NFTGallery } from "@/components/nft/NFTGallery";
+import { TransactionList } from "@/components/transaction/TransactionList";
+import { FeaturedNFTs } from "@/components/nft/FeaturedNFTs";
 // Default address to use if none provided
 const DEFAULT_ADDRESS = process.env.NEXT_PUBLIC_DEFAULT_ADDRESS!;
 

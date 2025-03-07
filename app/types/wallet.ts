@@ -1,3 +1,9 @@
+import { z } from "zod";
+import {
+  BlockfrostAmountSchema,
+  BlockfrostAssetMetadataSchema,
+} from "./blockfrost";
+
 export interface Asset {
   unit: string;
   quantity: string;
@@ -5,33 +11,39 @@ export interface Asset {
   fingerprint?: string;
 }
 
-export interface Transaction {
-  txHash: string;
-  timestamp: number;
-  block: string;
-  amount?: number;
-  fee?: number;
-}
+// Define your schemas
+export const TransactionSchema = z.object({
+  txHash: z.string(),
+  timestamp: z.number(),
+  block: z.string(),
+  amount: z.number(),
+  fee: z.number().optional(),
+});
 
-export interface NFT {
-  asset: string;
-  name: string;
-  image: string;
-  collection?: string;
-  policyId?: string;
-  assetName?: string;
-  fingerprint?: string;
-  description?: string;
-  initialMintTxHash?: string;
-  metadata?: unknown;
-}
+export const NFTSchema = z.object({
+  asset: z.string(),
+  name: z.string(),
+  image: z.string(),
+  collection: z.string().optional(),
+  policyId: z.string().optional(),
+  assetName: z.string().optional(),
+  fingerprint: z.string().optional(),
+  description: z.string().optional(),
+  initialMintTxHash: z.string().optional(),
+  metadata: BlockfrostAssetMetadataSchema,
+});
 
-export interface WalletData {
-  address: string;
-  balance: {
-    lovelace: number;
-  };
-  assets: Asset[];
-  nfts: NFT[];
-  transactions: Transaction[];
-}
+export const WalletDataSchema = z.object({
+  address: z.string(),
+  balance: z.object({
+    lovelace: z.number(),
+  }),
+  assets: z.array(BlockfrostAmountSchema),
+  nfts: z.array(NFTSchema),
+  transactions: z.array(TransactionSchema),
+});
+
+// Export types from schemas
+export type Transaction = z.infer<typeof TransactionSchema>;
+export type NFT = z.infer<typeof NFTSchema>;
+export type WalletData = z.infer<typeof WalletDataSchema>;

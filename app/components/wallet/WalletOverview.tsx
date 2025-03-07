@@ -1,11 +1,11 @@
-import { WalletData } from '@/types/wallet';
+import { WalletData } from "@/types/wallet";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 
 interface WalletOverviewProps {
   data: WalletData;
@@ -26,7 +26,7 @@ export function WalletOverview({ data, address }: WalletOverviewProps) {
           <div className="bg-white p-4 rounded-lg border shadow-sm">
             <h3 className="text-lg font-medium mb-2">Balance</h3>
             <div className="text-2xl font-semibold">
-              {data.balance ? `${data.balance.lovelace / 1000000} ₳` : '0 ₳'}
+              {data.balance ? `${data.balance.lovelace / 1000000} ₳` : "0 ₳"}
             </div>
           </div>
           <div className="bg-white p-4 rounded-lg border shadow-sm">

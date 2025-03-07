@@ -1,4 +1,5 @@
 import axios from "axios";
+import { z } from "zod";
 import {
   BlockfrostAssetMetadata,
   BlockfrostAssetInfo,
@@ -35,6 +36,19 @@ export const blockfrostFetch = async <T>(endpoint: string): Promise<T> => {
       );
     }
     throw error;
+  }
+};
+
+// Add a new validation function that doesn't affect the main API calls
+export const validateData = <T>(data: T, schema: z.ZodType<T>): T => {
+  try {
+    return schema.parse(data);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.warn("Validation warning:", error.issues);
+    }
+    // Return the original data even if validation fails
+    return data;
   }
 };
 
@@ -267,6 +281,7 @@ export async function fetchNFTData(assetId: string): Promise<NFT | null> {
     return null;
   }
 }
+
 export async function fetchFeaturedNFTs(limit: number = 16): Promise<NFT[]> {
   try {
     // Fetch some recent or popular assets from Blockfrost
@@ -288,25 +303,28 @@ export async function fetchFeaturedNFTs(limit: number = 16): Promise<NFT[]> {
         // For marketplace, we only want items with images
         if (metadata && assetInfo.quantity === "1") {
           const imageUrl = extractImageUrl(metadata);
+          // Ensure name is always a non-null string
           const assetName =
             metadata.name || assetInfo.asset_name || "Unknown Asset";
 
-          nfts.push({
+          // Create NFT object matching your NFT type
+          const nft: NFT = {
             asset: assetItem.asset,
             name: assetName,
             image: imageUrl,
             collection:
               metadata.collection ||
-              (assetInfo.policy_id
-                ? assetInfo.policy_id.slice(0, 10)
-                : undefined),
-            policyId: assetInfo.policy_id,
-            assetName: assetInfo.asset_name,
-            fingerprint: assetInfo.fingerprint,
-            description: metadata.description as string,
-            initialMintTxHash: assetInfo.initial_mint_tx_hash,
+              (assetInfo.policy_id ? assetInfo.policy_id.slice(0, 10) : "") ||
+              "",
+            policyId: assetInfo.policy_id || "",
+            assetName: assetInfo.asset_name || "",
+            fingerprint: assetInfo.fingerprint || "",
+            description: (metadata.description as string) || "",
+            initialMintTxHash: assetInfo.initial_mint_tx_hash || "",
             metadata: metadata,
-          });
+          };
+
+          nfts.push(nft);
         }
       } catch (error) {
         console.error(`Failed to process asset ${assetItem.asset}:`, error);
