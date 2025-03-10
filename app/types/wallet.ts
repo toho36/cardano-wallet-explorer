@@ -23,7 +23,7 @@ export const TransactionSchema = z.object({
 export const NFTSchema = z.object({
   asset: z.string(),
   name: z.string(),
-  image: z.string(),
+  image: z.string().nullable(),
   collection: z.string().optional(),
   policyId: z.string().optional(),
   assetName: z.string().optional(),

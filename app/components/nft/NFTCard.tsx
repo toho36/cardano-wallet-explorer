@@ -10,8 +10,13 @@ interface NFTCardProps {
 }
 
 // Helper function to ensure image URLs are properly formatted
-const getFormattedImageUrl = (imageUrl: string | null | undefined): string => {
-  if (!imageUrl) return "";
+const getFormattedImageUrl = (
+  imageUrl: string | null | undefined
+): string | null => {
+  if (!imageUrl || imageUrl.trim() === "") return null;
+
+  // Detect data URLs (especially SVG placeholders) and treat them as no image
+  if (imageUrl.startsWith("data:")) return null;
 
   // Check if it's already a valid URL
   if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {

@@ -53,11 +53,14 @@ export const validateData = <T>(data: T, schema: z.ZodType<T>): T => {
 };
 
 // Function to extract image URL from metadata
-export const extractImageUrl = (metadata: BlockfrostAssetMetadata): string => {
+export const extractImageUrl = (
+  metadata: BlockfrostAssetMetadata
+): string | null => {
   try {
     // Case 1: No image property
     if (!metadata.image) {
-      return "/images/no-image-placeholder.png"; // Local placeholder image
+      // Return null instead of placeholder for NFTs without images
+      return null;
     }
 
     // Case 2: Image is a string
@@ -84,11 +87,11 @@ export const extractImageUrl = (metadata: BlockfrostAssetMetadata): string => {
       }
     }
 
-    // Fallback
-    return "/images/no-image-placeholder.png"; // Local placeholder image
+    // Return null instead of a fallback image
+    return null;
   } catch (e) {
-    console.error("Error parsing image metadata:", e);
-    return "/images/no-image-placeholder.png"; // Local placeholder image
+    console.error("Error extracting image URL:", e);
+    return null;
   }
 };
 
@@ -284,9 +287,12 @@ export async function fetchNFTData(assetId: string): Promise<NFT | null> {
 
 export async function fetchFeaturedNFTs(limit: number = 16): Promise<NFT[]> {
   try {
+    // Get a larger number of assets to ensure we find enough with images
+    const searchLimit = limit * 3; // Fetch more assets to ensure we get enough with images
+
     // Fetch some recent or popular assets from Blockfrost
     const assets = await blockfrostFetch<{ asset: string }[]>(
-      `/assets?order=desc&count=${limit}`
+      `/assets?order=desc&count=${searchLimit}`
     );
 
     const nfts: NFT[] = [];
@@ -303,35 +309,39 @@ export async function fetchFeaturedNFTs(limit: number = 16): Promise<NFT[]> {
         // For marketplace, we only want items with images
         if (metadata && assetInfo.quantity === "1") {
           const imageUrl = extractImageUrl(metadata);
-          // Ensure name is always a non-null string
-          const assetName =
-            metadata.name || assetInfo.asset_name || "Unknown Asset";
 
-          // Create NFT object matching your NFT type
-          const nft: NFT = {
-            asset: assetItem.asset,
-            name: assetName,
-            image: imageUrl,
-            collection:
-              metadata.collection ||
-              (assetInfo.policy_id ? assetInfo.policy_id.slice(0, 10) : "") ||
-              "",
-            policyId: assetInfo.policy_id || "",
-            assetName: assetInfo.asset_name || "",
-            fingerprint: assetInfo.fingerprint || "",
-            description: (metadata.description as string) || "",
-            initialMintTxHash: assetInfo.initial_mint_tx_hash || "",
-            metadata: metadata,
-          };
+          // Only add NFTs that have images
+          if (imageUrl) {
+            // Ensure name is always a non-null string
+            const assetName =
+              metadata.name || assetInfo.asset_name || "Unknown Asset";
 
-          nfts.push(nft);
+            // Create NFT object matching your NFT type
+            const nft: NFT = {
+              asset: assetItem.asset,
+              name: assetName,
+              image: imageUrl,
+              collection:
+                metadata.collection ||
+                (assetInfo.policy_id ? assetInfo.policy_id.slice(0, 10) : "") ||
+                "",
+              policyId: assetInfo.policy_id || "",
+              assetName: assetInfo.asset_name || "",
+              fingerprint: assetInfo.fingerprint || "",
+              description: (metadata.description as string) || "",
+              initialMintTxHash: assetInfo.initial_mint_tx_hash || "",
+              metadata: metadata,
+            };
+
+            nfts.push(nft);
+          }
         }
       } catch (error) {
         console.error(`Failed to process asset ${assetItem.asset}:`, error);
       }
 
-      // Stop if we have enough NFTs
-      if (nfts.length >= limit / 2) break;
+      // Stop if we have enough NFTs with images (at least 12, or the specified limit)
+      if (nfts.length >= Math.max(12, limit)) break;
     }
 
     return nfts;

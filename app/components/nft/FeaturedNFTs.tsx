@@ -9,6 +9,7 @@ import { NFTCard } from "@/components/nft/NFTCard";
 import { useCarouselStore } from "@/store/carouselStore";
 
 export function FeaturedNFTs() {
+  // Set limit to at least 12 NFTs to display
   const limit = 24;
   const { hasMoved } = useCarouselStore();
 
@@ -43,7 +44,22 @@ export function FeaturedNFTs() {
     );
   }
 
-  const nftCards = nfts.map((nft) => (
+  // Filter out NFTs without images - this should be redundant now since the API should
+  // return only NFTs with images, but kept as a safety check
+  const nftsWithImages = nfts.filter((nft) => nft.image);
+
+  if (nftsWithImages.length === 0) {
+    return (
+      <div className="text-center py-6 bg-gray-50 rounded-lg">
+        <p className="text-gray-500">
+          No featured items with images available at the moment.
+        </p>
+      </div>
+    );
+  }
+
+  // Create cards for all NFTs with images
+  const nftCards = nftsWithImages.map((nft) => (
     <NFTCard key={nft.asset} nft={nft} hasMoved={hasMoved} />
   ));
 
