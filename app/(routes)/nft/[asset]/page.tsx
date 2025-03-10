@@ -10,6 +10,14 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 
+// Type definitions for NFT metadata fields
+interface NFTLinks {
+  discord?: string;
+  twitter?: string;
+  website?: string;
+  [key: string]: string | undefined;
+}
+
 export default function NFTDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -208,6 +216,45 @@ export default function NFTDetailPage() {
                   >
                     View on explorer <ExternalLink className="h-3 w-3" />
                   </a>
+                </div>
+              )}
+
+              {/* Display Social Links if they exist */}
+              {nft.metadata && "links" in nft.metadata && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Links</h3>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(nft.metadata.links as NFTLinks)?.discord && (
+                      <a
+                        href={(nft.metadata.links as NFTLinks).discord}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-sm"
+                      >
+                        Discord <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    {(nft.metadata.links as NFTLinks)?.twitter && (
+                      <a
+                        href={(nft.metadata.links as NFTLinks).twitter}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-sm"
+                      >
+                        Twitter <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    {(nft.metadata.links as NFTLinks)?.website && (
+                      <a
+                        href={(nft.metadata.links as NFTLinks).website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-sm"
+                      >
+                        Website <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
                 </div>
               )}
             </CardContent>

@@ -72,7 +72,37 @@ export const extractImageUrl = (
       return metadata.image;
     }
 
-    // Case 3: Image is an object (might have src, uri, or other properties)
+    // Case 3: Image is an array (common in some Cardano NFTs)
+    if (Array.isArray(metadata.image)) {
+      // Join all array elements to form the complete path
+      const joinedPath = metadata.image.join("");
+
+      // Check if the joined path contains an IPFS URL
+      if (joinedPath.includes("ipfs://")) {
+        return `https://ipfs.io/ipfs/${joinedPath.replace("ipfs://", "")}`;
+      }
+
+      // If it's already a full URL, use it directly
+      if (joinedPath.startsWith("http")) {
+        return joinedPath;
+      }
+
+      // Handle case where array elements need to be joined for IPFS path
+      const firstElement = metadata.image[0];
+      if (
+        typeof firstElement === "string" &&
+        firstElement.startsWith("ipfs://")
+      ) {
+        // This handles the special case where the IPFS URL is split across array elements
+        return `https://ipfs.io/ipfs/${metadata.image
+          .join("")
+          .replace("ipfs://", "")}`;
+      }
+
+      return joinedPath;
+    }
+
+    // Case 4: Image is an object (might have src, uri, or other properties)
     if (typeof metadata.image === "object") {
       const possibleKeys = ["src", "uri", "url", "link"];
       for (const key of possibleKeys) {
