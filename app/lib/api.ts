@@ -9,9 +9,16 @@ import {
   BlockfrostUtxos,
   BlockfrostAddressInfo,
   BlockfrostAddressExtended,
+  BlockfrostAddressStake,
+  BlockfrostStakePool,
 } from "../types/blockfrost";
 
-import { Transaction, NFT, WalletData } from "../types/wallet";
+import {
+  Transaction,
+  NFT,
+  WalletData,
+  TransactionDetails,
+} from "../types/wallet";
 
 // Blockfrost API configuration
 const API_URL = process.env.NEXT_PUBLIC_BLOCKFROST_API_URL;
@@ -156,6 +163,89 @@ export async function fetchWalletData(address: string): Promise<WalletData> {
     // Process NFTs from assets
     const nfts = await processNFTs(assets.amount || []);
 
+    // Fetch delegation information
+    let delegation: {
+      active: boolean;
+      stake_address?: string;
+      pool_id?: string;
+      pool_name?: string;
+      pool_ticker?: string;
+      rewards_sum?: string;
+      withdrawable_amount?: string;
+    } = {
+      active: false,
+    };
+
+    try {
+      // Get the stake address directly from the address info
+      const stake_address = addressInfo.stake_address;
+
+      if (stake_address) {
+        // Fetch account info for the stake address
+        const accountInfo = await blockfrostFetch<BlockfrostAddressStake>(
+          `/accounts/${stake_address}`
+        );
+
+        if (accountInfo.active && accountInfo.pool_id) {
+          // Fetch pool details
+          const poolInfo = await blockfrostFetch<BlockfrostStakePool>(
+            `/pools/${accountInfo.pool_id}`
+          );
+
+          // Get pool metadata if it's available
+          let poolName = "Unknown Pool";
+          let poolTicker = undefined;
+
+          if (poolInfo.metadata) {
+            poolName = poolInfo.metadata.name || poolName;
+            poolTicker = poolInfo.metadata.ticker;
+          } else {
+            // Attempt to fetch pool metadata separately
+            try {
+              interface PoolMetadata {
+                name?: string;
+                ticker?: string;
+                description?: string;
+                homepage?: string;
+              }
+
+              const poolMetadata = await blockfrostFetch<PoolMetadata>(
+                `/pools/${accountInfo.pool_id}/metadata`
+              );
+              if (poolMetadata) {
+                poolName = poolMetadata.name || poolName;
+                poolTicker = poolMetadata.ticker;
+              }
+            } catch (metadataError) {
+              console.warn("Could not fetch pool metadata:", metadataError);
+            }
+          }
+
+          delegation = {
+            active: true,
+            stake_address,
+            pool_id: accountInfo.pool_id,
+            pool_name: poolName,
+            pool_ticker: poolTicker,
+            rewards_sum: accountInfo.rewards_sum,
+            withdrawable_amount: accountInfo.withdrawable_amount,
+          };
+        } else {
+          // Wallet has a stake address but is not delegated or not active
+          delegation = {
+            active: !!accountInfo.active,
+            stake_address,
+          };
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching delegation info:", error);
+      // Default to not delegated if there's an error
+      delegation = {
+        active: false,
+      };
+    }
+
     return {
       address,
       balance: {
@@ -167,6 +257,7 @@ export async function fetchWalletData(address: string): Promise<WalletData> {
       assets: assets.amount || [],
       nfts,
       transactions,
+      delegation,
     };
   } catch (error) {
     console.error("Error fetching wallet data:", error);
@@ -378,5 +469,20 @@ export async function fetchFeaturedNFTs(limit: number = 16): Promise<NFT[]> {
   } catch (error) {
     console.error("Error fetching featured NFTs:", error);
     return [];
+  }
+}
+
+// Function to fetch detailed transaction data
+export async function fetchTransactionDetails(
+  txHash: string
+): Promise<TransactionDetails> {
+  try {
+    // Fetch transaction details
+    const txData = await blockfrostFetch<TransactionDetails>(`/txs/${txHash}`);
+
+    return txData;
+  } catch (error) {
+    console.error("Error fetching transaction details:", error);
+    throw error;
   }
 }
