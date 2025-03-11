@@ -1,20 +1,34 @@
-'use client';
+"use client";
 
-import { useParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, Share2, ExternalLink } from 'lucide-react';
-import { fetchNFTData } from '@/lib/api';
-import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
-import Image from 'next/image';
+import { useParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChevronLeft, Share2, ExternalLink } from "lucide-react";
+import { fetchNFTData, fetchWalletData } from "@/lib/api";
+import { Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import { NFTGallery } from "@/components/nft/NFTGallery";
+import { WalletData } from "@/types/wallet";
+
+// Type definitions for NFT metadata fields
+interface NFTLinks {
+  discord?: string;
+  twitter?: string;
+  website?: string;
+  [key: string]: string | undefined;
+}
 
 export default function NFTDetailPage() {
   const params = useParams();
   const router = useRouter();
   const assetId = decodeURIComponent(params.asset as string);
   const [shareTooltip, setShareTooltip] = useState(false);
+  const [ownerWalletData, setOwnerWalletData] = useState<WalletData | null>(
+    null
+  );
+  const [isLoadingWallet, setIsLoadingWallet] = useState(false);
 
   // Fetch NFT data directly by asset ID
   const {
@@ -23,10 +37,27 @@ export default function NFTDetailPage() {
     isError,
     error,
   } = useQuery({
-    queryKey: ['nft', assetId],
+    queryKey: ["nft", assetId],
     queryFn: () => fetchNFTData(assetId),
     retry: 2,
   });
+
+  // Fetch wallet data when NFT data is available
+  useEffect(() => {
+    if (nft && nft.owner) {
+      setIsLoadingWallet(true);
+      fetchWalletData(nft.owner)
+        .then((data) => {
+          setOwnerWalletData(data);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch wallet data:", err);
+        })
+        .finally(() => {
+          setIsLoadingWallet(false);
+        });
+    }
+  }, [nft]);
 
   const handleBack = () => {
     router.back();
@@ -36,12 +67,12 @@ export default function NFTDetailPage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: nft?.name || 'NFT Details',
+          title: nft?.name || "NFT Details",
           text: `Check out this NFT: ${nft?.name}`,
           url: window.location.href,
         });
       } catch (err) {
-        console.error('Failed to share:', err);
+        console.error("Failed to share:", err);
       }
     } else {
       // Fallback for browsers that don't support Web Share API
@@ -75,7 +106,7 @@ export default function NFTDetailPage() {
         <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-6">
             <p className="text-red-600">
-              {isError ? `Error: ${error.message}` : 'NFT not found'}
+              {isError ? `Error: ${error.message}` : "NFT not found"}
             </p>
           </CardContent>
         </Card>
@@ -117,14 +148,14 @@ export default function NFTDetailPage() {
               <div className="relative aspect-square">
                 <Image
                   src={nft.image}
-                  alt={nft.name || 'NFT'}
+                  alt={nft.name || "NFT"}
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-contain"
                   priority
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
+                    target.style.display = "none";
                     if (target.parentElement) {
                       target.parentElement.innerHTML =
                         '<div class="flex items-center justify-center h-full w-full text-gray-500">Image not available</div>';
@@ -144,7 +175,7 @@ export default function NFTDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-xl md:text-2xl">
-                {nft.name || 'Unnamed NFT'}
+                {nft.name || "Unnamed NFT"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -210,10 +241,75 @@ export default function NFTDetailPage() {
                   </a>
                 </div>
               )}
+
+              {/* Display Social Links if they exist */}
+              {nft.metadata && "links" in nft.metadata && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Links</h3>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(nft.metadata.links as NFTLinks)?.discord && (
+                      <a
+                        href={(nft.metadata.links as NFTLinks).discord}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-sm"
+                      >
+                        Discord <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    {(nft.metadata.links as NFTLinks)?.twitter && (
+                      <a
+                        href={(nft.metadata.links as NFTLinks).twitter}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-sm"
+                      >
+                        Twitter <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    {(nft.metadata.links as NFTLinks)?.website && (
+                      <a
+                        href={(nft.metadata.links as NFTLinks).website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-sm"
+                      >
+                        Website <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Add NFT Gallery section */}
+      {nft && nft.owner && (
+        <div className="mt-12 max-w-4xl mx-auto w-full">
+          <h2 className="text-xl font-semibold mb-4">
+            More NFTs from this wallet
+          </h2>
+          {isLoadingWallet ? (
+            <div className="flex justify-center items-center h-36">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="ml-2">Loading NFTs...</span>
+            </div>
+          ) : ownerWalletData && ownerWalletData.nfts.length > 0 ? (
+            <NFTGallery
+              nfts={ownerWalletData.nfts.filter(
+                (item) => item.asset !== assetId
+              )}
+              walletAddress={nft.owner}
+            />
+          ) : (
+            <p className="text-gray-500 text-center py-8">
+              No other NFTs found in this wallet
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
