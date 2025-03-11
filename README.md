@@ -52,6 +52,8 @@ git clone https://github.com/your-username/cardano-wallet-explorer.git
 cd cardano-wallet-explorer
 bun install
 ```
+### Note:
+The .env file is required to run the app. Make sure to create it from .env.sample and fill in the necessary parameters.
 
 ### Development
 ```bash
