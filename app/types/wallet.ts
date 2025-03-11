@@ -52,6 +52,7 @@ export const NFTSchema = z.object({
   description: z.string().optional(),
   initialMintTxHash: z.string().optional(),
   metadata: BlockfrostAssetMetadataSchema,
+  owner: z.string().optional(),
 });
 
 export const WalletDataSchema = z.object({

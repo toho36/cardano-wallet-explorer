@@ -5,10 +5,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft, Share2, ExternalLink } from "lucide-react";
-import { fetchNFTData } from "@/lib/api";
+import { fetchNFTData, fetchWalletData } from "@/lib/api";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { NFTGallery } from "@/components/nft/NFTGallery";
+import { WalletData } from "@/types/wallet";
 
 // Type definitions for NFT metadata fields
 interface NFTLinks {
@@ -23,6 +25,10 @@ export default function NFTDetailPage() {
   const router = useRouter();
   const assetId = decodeURIComponent(params.asset as string);
   const [shareTooltip, setShareTooltip] = useState(false);
+  const [ownerWalletData, setOwnerWalletData] = useState<WalletData | null>(
+    null
+  );
+  const [isLoadingWallet, setIsLoadingWallet] = useState(false);
 
   // Fetch NFT data directly by asset ID
   const {
@@ -35,6 +41,23 @@ export default function NFTDetailPage() {
     queryFn: () => fetchNFTData(assetId),
     retry: 2,
   });
+
+  // Fetch wallet data when NFT data is available
+  useEffect(() => {
+    if (nft && nft.owner) {
+      setIsLoadingWallet(true);
+      fetchWalletData(nft.owner)
+        .then((data) => {
+          setOwnerWalletData(data);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch wallet data:", err);
+        })
+        .finally(() => {
+          setIsLoadingWallet(false);
+        });
+    }
+  }, [nft]);
 
   const handleBack = () => {
     router.back();
@@ -261,6 +284,32 @@ export default function NFTDetailPage() {
           </Card>
         </div>
       </div>
+
+      {/* Add NFT Gallery section */}
+      {nft && nft.owner && (
+        <div className="mt-12 max-w-4xl mx-auto w-full">
+          <h2 className="text-xl font-semibold mb-4">
+            More NFTs from this wallet
+          </h2>
+          {isLoadingWallet ? (
+            <div className="flex justify-center items-center h-36">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="ml-2">Loading NFTs...</span>
+            </div>
+          ) : ownerWalletData && ownerWalletData.nfts.length > 0 ? (
+            <NFTGallery
+              nfts={ownerWalletData.nfts.filter(
+                (item) => item.asset !== assetId
+              )}
+              walletAddress={nft.owner}
+            />
+          ) : (
+            <p className="text-gray-500 text-center py-8">
+              No other NFTs found in this wallet
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

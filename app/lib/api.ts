@@ -376,6 +376,20 @@ export async function fetchNFTData(assetId: string): Promise<NFT | null> {
       return null;
     }
 
+    // Fetch address that owns this asset
+    let owner = null;
+    try {
+      const addresses = await blockfrostFetch<{ address: string }[]>(
+        `/assets/${assetId}/addresses`
+      );
+
+      if (addresses && addresses.length > 0) {
+        owner = addresses[0].address;
+      }
+    } catch (ownerError) {
+      console.error("Failed to fetch asset owner:", ownerError);
+    }
+
     // Process the metadata (onchain_metadata has priority over metadata)
     const metadata = assetInfo.onchain_metadata || assetInfo.metadata;
 
@@ -397,6 +411,7 @@ export async function fetchNFTData(assetId: string): Promise<NFT | null> {
         description: metadata.description as string,
         initialMintTxHash: assetInfo.initial_mint_tx_hash,
         metadata: metadata,
+        owner: owner || undefined,
       };
     }
     return null;
