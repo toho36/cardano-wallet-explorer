@@ -6,12 +6,10 @@ import { Loader2 } from "lucide-react";
 import { useCarousel } from "@/hooks/useCarousel";
 import { Carousel } from "@/components/ui/carousel";
 import { NFTCard } from "@/components/nft/NFTCard";
-import { useCarouselStore } from "@/store/carouselStore";
 
 export function FeaturedNFTs() {
   // Set limit to at least 12 NFTs to display
   const limit = 24;
-  const { hasMoved } = useCarouselStore();
 
   const {
     data: nfts,
@@ -29,7 +27,7 @@ export function FeaturedNFTs() {
     return (
       <div className="flex justify-center items-center h-32 sm:h-48">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        <span className="ml-2">Loading marketplace...</span>
+        <span className="ml-2">Loading featured NFTs...</span>
       </div>
     );
   }
@@ -60,7 +58,7 @@ export function FeaturedNFTs() {
 
   // Create cards for all NFTs with images
   const nftCards = nftsWithImages.map((nft) => (
-    <NFTCard key={nft.asset} nft={nft} hasMoved={hasMoved} />
+    <NFTCard key={nft.asset} nft={nft} />
   ));
 
   return (

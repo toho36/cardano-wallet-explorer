@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import { useCarouselStore } from "@/store/carouselStore";
 
 export const useCarousel = (totalItems: number, autoPlayInterval = 5000) => {
@@ -9,21 +9,24 @@ export const useCarousel = (totalItems: number, autoPlayInterval = 5000) => {
     isTouching,
     dragOffset,
     hasMoved,
+    touchStart,
+    touchEnd,
+    dragStart,
+    dragEnd,
     setCurrentIndex,
     setItemsPerSlide,
     setIsDragging,
     setIsTouching,
     setDragOffset,
     setHasMoved,
+    setTouchStart,
+    setTouchEnd,
+    setDragStart,
+    setDragEnd,
     nextSlide,
     prevSlide,
     resetDrag,
   } = useCarouselStore();
-
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
-  const [dragStart, setDragStart] = useState(0);
-  const [dragEnd, setDragEnd] = useState(0);
 
   const sliderRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -71,7 +74,7 @@ export const useCarousel = (totalItems: number, autoPlayInterval = 5000) => {
       setTouchEnd(e.targetTouches[0].clientX);
       resetDrag();
     },
-    [setIsTouching, resetDrag]
+    [setIsTouching, setTouchStart, setTouchEnd, resetDrag]
   );
 
   const handleTouchMove = useCallback(
@@ -91,7 +94,14 @@ export const useCarousel = (totalItems: number, autoPlayInterval = 5000) => {
 
       setDragOffset(diff * percentPerPixel);
     },
-    [totalItems, touchStart, itemsPerSlide, setHasMoved, setDragOffset]
+    [
+      totalItems,
+      touchStart,
+      itemsPerSlide,
+      setTouchEnd,
+      setHasMoved,
+      setDragOffset,
+    ]
   );
 
   const handleTouchEnd = useCallback(() => {
@@ -128,7 +138,7 @@ export const useCarousel = (totalItems: number, autoPlayInterval = 5000) => {
       setDragEnd(e.clientX);
       resetDrag();
     },
-    [setIsDragging, resetDrag]
+    [setIsDragging, setDragStart, setDragEnd, resetDrag]
   );
 
   const handleMouseMove = useCallback(
@@ -153,6 +163,7 @@ export const useCarousel = (totalItems: number, autoPlayInterval = 5000) => {
       totalItems,
       dragStart,
       itemsPerSlide,
+      setDragEnd,
       setHasMoved,
       setDragOffset,
     ]

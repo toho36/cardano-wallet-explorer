@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,12 +12,18 @@ import { WalletOverview } from "@/components/wallet/WalletOverview";
 import { NFTGallery } from "@/components/nft/NFTGallery";
 import { TransactionList } from "@/components/transaction/TransactionList";
 import { FeaturedNFTs } from "@/components/nft/FeaturedNFTs";
-// Default address to use if none provided
-const DEFAULT_ADDRESS = process.env.NEXT_PUBLIC_DEFAULT_ADDRESS!;
+import { useWalletStore } from "@/store/walletStore";
 
 export default function Home() {
-  const [address, setAddress] = useState(DEFAULT_ADDRESS);
-  const [inputAddress, setInputAddress] = useState(DEFAULT_ADDRESS);
+  const {
+    address,
+    inputAddress,
+    setAddress,
+    setInputAddress,
+    setWalletData,
+    setLoading,
+    setError,
+  } = useWalletStore();
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["wallet", address],
@@ -25,11 +31,19 @@ export default function Home() {
     retry: 2,
   });
 
+  useEffect(() => {
+    setWalletData(data || null);
+    setLoading(isLoading);
+    if (isError && error) {
+      setError(error as Error);
+    }
+  }, [data, isLoading, isError, error, setWalletData, setLoading, setError]);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setAddress(inputAddress);
   };
-  console.log(data?.nfts, "data");
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
